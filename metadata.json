@@ -1,0 +1,9 @@
+{
+  "name": "Zanta Play Arena",
+  "description": "Premium multiplayer board games (Big Dam, Chess, Ludo with track squares), Water Sort, Animal Match Puzzle, Memory game, AI Assistant bot, and live matches simulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "dependencies": []
+}

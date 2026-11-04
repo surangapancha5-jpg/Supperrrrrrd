@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif;
+  }
+}
+
+@keyframes rgb-border-flow {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.rgb-glow {
+  background: linear-gradient(90deg, #ff0055, #7a00ff, #00d4ff, #00ff66, #ffbb00, #ff0055);
+  background-size: 300% 300%;
+  animation: rgb-gradient 6s ease infinite;
+}
+
+@keyframes rgb-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.rgb-border {
+  position: relative;
+}
+.rgb-border::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  background: linear-gradient(90deg, #ff007f, #7928ca, #0070f3, #00dfd8, #00ff7f, #ff007f);
+  background-size: 300% 300%;
+  animation: rgb-gradient 4s linear infinite;
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.85;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
