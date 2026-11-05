@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="si" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Chat & Text Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gemini: {
+                            50: '#f0f4ff',
+                            100: '#e0e9fe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            purple: '#8b5cf6',
+                            pink: '#ec4899'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Highlight.js for Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <!-- MarkedJS for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Sans Sinhala', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.6);
+        }
+
+        .markdown-body pre {
+            background-color: #1e1e2e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .markdown-body code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9em;
+        }
+        .markdown-body p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        .markdown-body ul, .markdown-body ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .markdown-body ul { list-style-type: disc; }
+        .markdown-body ol { list-style-type: decimal; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-2 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid font-bold fa-sparkles text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        Gemini Studio
+                    </h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">ජෙනරේටිව් AI සහයක / AI Assistant</p>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Clear Chat -->
+                <button id="clearChatBtn" title="Clear History" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                </button>
+
+                <!-- Settings Toggle Button (Mobile) -->
+                <button id="toggleSettingsBtn" class="lg:hidden p-2 rounded-lg bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Sidebar Controls & Settings -->
+        <aside id="settingsSidebar" class="hidden lg:block lg:col-span-1 bg-white dark:bg-gray-800/60 backdrop-blur border border-gray-200 dark:border-gray-700/60 rounded-2xl p-5 space-y-6 h-fit sticky top-20 shadow-sm">
+            
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+                <h2 class="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-500"></i> සැකසුම් (Settings)
+                </h2>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-medium">v1.5</span>
+            </div>
+
+            <!-- API Key Input Section -->
+            <div class="space-y-2">
+                <label for="apiKey" class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    API Key එක (Gemini API Key)
+                </label>
+                <div class="relative">
+                    <input type="password" id="apiKey" 
+                           class="w-full px-3 py-2 pr-9 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all"
+                           placeholder="API Key එක ඇතුළත් කරන්න...">
+                    <button id="toggleKeyVisibility" class="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <i class="fa-solid fa-shield-halved text-green-500"></i> Key එක browser එකේ පමණක් සුරක්ෂිතව තැබේ.
+                </p>
+            </div>
+
+            <!-- Model Selection -->
+            <div class="space-y-2">
+                <label for="modelSelect" class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    මාදිලිය (Model)
+                </label>
+                <select id="modelSelect" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash (Latest)</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                </select>
+            </div>
+
+            <!-- System Instructions -->
+            <div class="space-y-2">
+                <label for="systemPrompt" class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    System Instruction (Persona)
+                </label>
+                <textarea id="systemPrompt" rows="2" 
+                          class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white resize-none"
+                          placeholder="උදා: You are a helpful Sinhala assistant..."></textarea>
+            </div>
+
+            <!-- Advanced Parameters -->
+            <div class="space-y-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <!-- Temperature -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Temperature (නිර්මාණශීලිත්වය)</label>
+                        <span id="tempValue" class="text-xs font-bold text-blue-600 dark:text-blue-400">0.7</span>
+                    </div>
+                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7" 
+                           class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                </div>
+
+                <!-- Max Output Tokens -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Max Tokens (උපරිම දිග)</label>
+                        <span id="maxTokensValue" class="text-xs font-bold text-blue-600 dark:text-blue-400">2048</span>
+                    </div>
+                    <input type="range" id="maxTokens" min="256" max="8192" step="256" value="2048" 
+                           class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Main Chat / Output Area -->
+        <section class="lg:col-span-3 flex flex-col h-[calc(100vh-8rem)] bg-white dark:bg-gray-800/60 backdrop-blur border border-gray-200 dark:border-gray-700/60 rounded-2xl shadow-sm overflow-hidden">
+            
+            <!-- Messages Container -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                
+                <!-- Welcome Banner -->
+                <div id="welcomeMessage" class="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="max-w-md">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Gemini AI Studio වෙත සාදරයෙන් පිළිගනිමු!</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            ඔබේ ප්‍රශ්න සිංහලෙන් හෝ ඉංග්‍රීසියෙන් මෙහි ඇතුළත් කර පිළිතුරු ලබා ගන්න. ආරම්භ කිරීමට පහතින් Text එකක් Type කරන්න.
+                        </p>
+                    </div>
+
+                    <!-- Quick Suggestions -->
+                    <div class="flex flex-wrap justify-center gap-2 pt-4">
+                        <button class="quick-prompt text-xs bg-gray-100 hover:bg-blue-50 dark:bg-gray-700/60 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-full transition-all">
+                            💡 සිංහලෙන් කවියක් ලියන්න
+                        </button>
+                        <button class="quick-prompt text-xs bg-gray-100 hover:bg-blue-50 dark:bg-gray-700/60 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-full transition-all">
+                            💻 Write a Python function for QuickSort
+                        </button>
+                        <button class="quick-prompt text-xs bg-gray-100 hover:bg-blue-50 dark:bg-gray-700/60 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-full transition-all">
+                            📝 Summarize quantum computing in simple terms
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Loading Spinner (Hidden by default) -->
+            <div id="loadingIndicator" class="hidden px-6 py-2 bg-gray-50/50 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-700/50">
+                <div class="flex items-center space-x-3 text-blue-600 dark:text-blue-400 text-xs font-medium">
+                    <i class="fa-solid fa-circle-notch fa-spin text-sm"></i>
+                    <span>Gemini සිතමින් පවතී (Generating response...)...</span>
+                </div>
+            </div>
+
+            <!-- Toast / Notification Bar -->
+            <div id="toast" class="hidden mx-4 my-2 p-3 rounded-lg text-xs font-medium flex items-center justify-between transition-all">
+                <span id="toastMsg">Notification message</span>
+                <button onclick="hideToast()" class="text-current opacity-70 hover:opacity-100">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Input Box Section -->
+            <div class="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40">
+                <form id="chatForm" class="flex items-end gap-2">
+                    <div class="relative flex-1">
+                        <textarea id="promptInput" rows="1" 
+                                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white resize-none shadow-sm max-h-36 overflow-y-auto"
+                                  placeholder="ඔබේ ප්‍රශ්නය හෝ උපදෙස මෙහි ලියන්න (Type prompt here)..."></textarea>
+                    </div>
+                    
+                    <button type="submit" id="sendBtn" 
+                            class="px-5 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl text-sm shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 min-w-[5rem] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span>යවන්න</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+                <div class="flex justify-between items-center text-[10px] text-gray-400 mt-2 px-1">
+                    <span>Shift + Enter for new line</span>
+                    <span id="charCounter">0 chars</span>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- App Script -->
+    <script>
+        // Preset default key provided in user request
+        const DEFAULT_API_KEY = "AQ.Ab8RN6JT6iMsJPdF2D32mr8EWCgmaAiiNImFDeIY_M2ELgIitg";
+
+        // DOM Elements
+        const apiKeyInput = document.getElementById('apiKey');
+        const toggleKeyVisibilityBtn = document.getElementById('toggleKeyVisibility');
+        const modelSelect = document.getElementById('modelSelect');
+        const systemPromptInput = document.getElementById('systemPrompt');
+        const tempInput = document.getElementById('temperature');
+        const tempValue = document.getElementById('tempValue');
+        const maxTokensInput = document.getElementById('maxTokens');
+        const maxTokensValue = document.getElementById('maxTokensValue');
+        
+        const chatMessages = document.getElementById('chatMessages');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const chatForm = document.getElementById('chatForm');
+        const promptInput = document.getElementById('promptInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const settingsSidebar = document.getElementById('settingsSidebar');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        const charCounter = document.getElementById('charCounter');
+
+        // App State
+        let conversationHistory = [];
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            // Load saved key or use default
+            const savedKey = localStorage.getItem('gemini_api_key');
+            apiKeyInput.value = savedKey || DEFAULT_API_KEY;
+
+            // Auto height for prompt input
+            promptInput.addEventListener('input', autoResizeTextarea);
+            
+            // Slider listeners
+            tempInput.addEventListener('input', (e) => tempValue.textContent = e.target.value);
+            maxTokensInput.addEventListener('input', (e) => maxTokensValue.textContent = e.target.value);
+            
+            // Character counter
+            promptInput.addEventListener('input', () => {
+                charCounter.textContent = `${promptInput.value.length} chars`;
+            });
+
+            // Quick suggestion buttons
+            document.querySelectorAll('.quick-prompt').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    promptInput.value = btn.textContent.trim().replace(/^[\u200B-\u200D\uFEFF]/, '').substring(2);
+                    autoResizeTextarea();
+                    promptInput.focus();
+                });
+            });
+
+            // Marked setup
+            marked.setOptions({
+                highlight: function(code, lang) {
+                    if (lang && hljs.getLanguage(lang)) {
+                        return hljs.highlight(code, { language: lang }).value;
+                    }
+                    return hljs.highlightAuto(code).value;
+                },
+                breaks: true
+            });
+        });
+
+        // Toggle Key Visibility
+        toggleKeyVisibilityBtn.addEventListener('click', () => {
+            const isPassword = apiKeyInput.type === 'password';
+            apiKeyInput.type = isPassword ? 'text' : 'password';
+            toggleKeyVisibilityBtn.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        });
+
+        // Save key on change
+        apiKeyInput.addEventListener('change', () => {
+            localStorage.setItem('gemini_api_key', apiKeyInput.value.trim());
+            showToast('API Key එක සාර්ථකව සුරැකිණි! (API Key saved)', 'success');
+        });
+
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Mobile Settings Sidebar Toggle
+        toggleSettingsBtn.addEventListener('click', () => {
+            settingsSidebar.classList.toggle('hidden');
+        });
+
+        // Auto-resize textarea
+        function autoResizeTextarea() {
+            promptInput.style.height = 'auto';
+            promptInput.style.height = Math.min(promptInput.scrollHeight, 144) + 'px';
+        }
+
+        // Handle Enter key submit (Shift+Enter for newline)
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Form Submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const promptText = promptInput.value.trim();
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!promptText) return;
+
+            if (!apiKey) {
+                showToast('කරුණාකර API Key එක ඇතුළත් කරන්න (Please provide a Gemini API Key)', 'error');
+                return;
+            }
+
+            // Hide welcome screen if first message
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+
+            // User message bubble
+            appendUserMessage(promptText);
+
+            // Add user turn to conversation history
+            conversationHistory.push({
+                role: 'user',
+                parts: [{ text: promptText }]
+            });
+
+            // Reset input field
+            promptInput.value = '';
+            promptInput.style.height = 'auto';
+            charCounter.textContent = '0 chars';
+
+            // Show Loading
+            setLoading(true);
+
+            // Make API Request
+            try {
+                const responseText = await callGeminiAPI(apiKey, promptText);
+                appendAiMessage(responseText);
+
+                // Save model response to history
+                conversationHistory.push({
+                    role: 'model',
+                    parts: [{ text: responseText }]
+                });
+
+            } catch (error) {
+                console.error('API Error:', error);
+                appendErrorMessage(error.message || 'දෝෂයක් සිදු විය. නැවත උත්සාහ කරන්න. (An error occurred while generating content)');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Gemini API Call Implementation
+        async function callGeminiAPI(apiKey, prompt) {
+            let selectedModel = modelSelect.value.trim();
+            
+            // Clean model string if user enters or selects full path
+            if (selectedModel.startsWith('models/')) {
+                selectedModel = selectedModel.replace('models/', '');
+            }
+
+            const systemInstruction = systemPromptInput.value.trim();
+            const temperature = parseFloat(tempInput.value);
+            const maxTokens = parseInt(maxTokensInput.value);
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: conversationHistory,
+                generationConfig: {
+                    temperature: temperature,
+                    maxOutputTokens: maxTokens
+                }
+            };
+
+            // Add System Instruction if provided
+            if (systemInstruction) {
+                payload.systemInstruction = {
+                    parts: [{ text: systemInstruction }]
+                };
+            }
+
+            // Exponential Backoff Fetch
+            let attempts = 0;
+            const maxAttempts = 3;
+            let delay = 1000;
+
+            while (attempts < maxAttempts) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error?.message || `HTTP error! Status: ${response.status}`);
+                    }
+
+                    const candidate = data.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        return candidate.content.parts[0].text;
+                    } else {
+                        throw new Error("API එකෙන් හිස් පිළිතුරක් ලැබුණි. (Empty or blocked response received)");
+                    }
+
+                } catch (err) {
+                    attempts++;
+                    if (attempts >= maxAttempts) {
+                        throw err;
+                    }
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2; // Exponential backoff
+                }
+            }
+        }
+
+        // Render User Message
+        function appendUserMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex justify-end';
+            msgDiv.innerHTML = `
+                <div class="max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-none px-4 py-3 shadow-sm text-sm leading-relaxed">
+                    <p class="whitespace-pre-wrap">${escapeHtml(text)}</p>
+                </div>
+            `;
+            chatMessages.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        // Render AI Message
+        function appendAiMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex items-start gap-3';
+            
+            const rawMarkdown = marked.parse(text);
+
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 text-white flex items-center justify-center shrink-0 text-xs shadow-md mt-1">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div class="max-w-[85%] bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-none p-4 shadow-sm text-sm text-gray-800 dark:text-gray-100 space-y-2">
+                    <div class="markdown-body">${rawMarkdown}</div>
+                    <div class="flex items-center justify-end pt-2 border-t border-gray-200/50 dark:border-gray-600/50 gap-2 text-xs text-gray-400">
+                        <button onclick="copyToClipboard(this)" data-text="${encodeURIComponent(text)}" class="hover:text-blue-500 flex items-center gap-1 transition-colors">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            chatMessages.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        // Render Error Message
+        function appendErrorMessage(errorMsg) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex items-start gap-3';
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-red-500 text-white flex items-center justify-center shrink-0 text-xs shadow-md mt-1">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="max-w-[85%] bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl rounded-tl-none p-4 shadow-sm text-sm">
+                    <p class="font-semibold mb-1">දෝෂයක් (Error):</p>
+                    <p>${escapeHtml(errorMsg)}</p>
+                </div>
+            `;
+            chatMessages.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        // Clear Chat History
+        clearChatBtn.addEventListener('click', () => {
+            if (confirm('ඔබට සියලුම චැට් ඉතිහාසය මකා දැමීමට අවශ්‍යද? (Are you sure you want to clear chat history?)')) {
+                conversationHistory = [];
+                chatMessages.innerHTML = `
+                    <div id="welcomeMessage" class="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+                        <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="max-w-md">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Gemini AI Studio</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">චැට් ඉතිහාසය මකා දමන ලදී. අලුත් ප්‍රශ්නයක් යොමු කරන්න.</p>
+                        </div>
+                    </div>
+                `;
+                showToast('චැට් ඉතිහාසය මකා දමන ලදී (Chat history cleared)', 'info');
+            }
+        });
+
+        // Utility: Copy text using execCommand for sandbox safety
+        window.copyToClipboard = function(btn) {
+            const textToCopy = decodeURIComponent(btn.getAttribute('data-text'));
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> Copied!`;
+                setTimeout(() => {
+                    btn.innerHTML = `<i class="fa-regular fa-copy"></i> Copy`;
+                }, 2000);
+            } catch (err) {
+                showToast('පිටපත් කිරීමට නොහැකි විය (Failed to copy)', 'error');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        };
+
+        // Utility: UI Helpers
+        function setLoading(isLoading) {
+            if (isLoading) {
+                loadingIndicator.classList.remove('hidden');
+                sendBtn.disabled = true;
+            } else {
+                loadingIndicator.classList.add('hidden');
+                sendBtn.disabled = false;
+            }
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showToast(message, type = 'info') {
+            toastMsg.textContent = message;
+            toast.className = `mx-4 my-2 p-3 rounded-lg text-xs font-medium flex items-center justify-between transition-all ${
+                type === 'error' ? 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-200' :
+                type === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-200' :
+                'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200'
+            }`;
+            toast.classList.remove('hidden');
+            setTimeout(hideToast, 4000);
+        }
+
+        function hideToast() {
+            toast.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
